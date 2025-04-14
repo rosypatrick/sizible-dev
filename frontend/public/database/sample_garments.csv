@@ -1,0 +1,16 @@
+fe_item_code,name,description,price,color,material,season,year,available_sizes,stock_status,garment_type,is_active
+JR001,Floral Maxi Dress,Beautiful floral pattern maxi dress with v-neck,129.99,Blue,Cotton Blend,Spring,2025,"S,M,L,XL",In Stock,Dress,true
+JR002,Tailored Blazer,Professional tailored blazer with gold buttons,159.99,Black,Polyester,All Season,2025,"S,M,L",In Stock,Jacket,true
+JR003,Slim Fit Pants,Elegant slim fit pants with stretch comfort,89.99,Navy,Cotton Stretch,All Season,2025,"6,8,10,12,14",In Stock,Pants,true
+JR004,Pleated Skirt,A-line pleated skirt with elastic waistband,79.99,Grey,Polyester Blend,Fall,2025,"S,M,L",In Stock,Skirt,true
+JR005,Silk Blouse,Luxurious silk blouse with button-up front,119.99,White,Silk,All Season,2025,"XS,S,M,L",In Stock,Top,true
+BB001,Wrap Dress,Flattering wrap dress with tie waist,149.99,Red,Viscose,Summer,2025,"S,M,L",In Stock,Dress,true
+BB002,Cropped Jacket,Stylish cropped jacket with zip closure,139.99,Beige,Cotton,Spring,2025,"S,M,L",Limited Stock,Jacket,true
+BB003,Wide Leg Trousers,Comfortable wide leg trousers with high waist,99.99,Black,Polyester,All Season,2025,"8,10,12,14",In Stock,Pants,true
+BB004,Pencil Skirt,Classic pencil skirt with back slit,89.99,Navy,Wool Blend,Fall,2025,"6,8,10,12",In Stock,Skirt,true
+BB005,Ruffled Blouse,Elegant ruffled blouse with short sleeves,109.99,Pink,Polyester,Spring,2025,"XS,S,M,L",Limited Stock,Top,true
+FL001,Evening Gown,Elegant floor-length evening gown with sequins,299.99,Black,Polyester Blend,All Season,2025,"S,M,L",In Stock,Dress,true
+FL002,Structured Blazer,Professional structured blazer with single button,179.99,White,Polyester Blend,All Season,2025,"S,M,L",In Stock,Jacket,true
+FL003,Cigarette Pants,Sleek cigarette pants with front crease,119.99,Black,Polyester Stretch,All Season,2025,"4,6,8,10,12",In Stock,Pants,true
+FL004,Asymmetric Skirt,Modern asymmetric skirt with unique hemline,129.99,Black,Polyester,All Season,2025,"S,M,L",Limited Stock,Skirt,true
+FL005,Embellished Top,Glamorous embellished top with beading,159.99,Silver,Polyester,All Season,2025,"S,M,L",In Stock,Top,true

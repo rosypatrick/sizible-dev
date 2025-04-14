@@ -14,6 +14,9 @@ import SizibleNavigation from './components/common/SizibleNavigation';
 import SizibleButton from './components/common/SizibleButton';
 import SizibleCard from './components/common/SizibleCard';
 import MeasurementInput from './components/consumer/MeasurementInput';
+import CsvImportPage from './pages/retailer/CsvImportPage';
+import ManageProductsPage from './pages/retailer/ManageProductsPage';
+import StyleGuidancePage from './pages/retailer/StyleGuidancePage';
 import styled from 'styled-components';
 
 // Styled components for the pages
@@ -94,6 +97,23 @@ const FormSection = styled.div`
 const SectionTitle = styled.h4`
   margin-bottom: ${props => props.theme.spacing.medium};
   color: ${props => props.theme.colors.primary};
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: ${props => props.theme.spacing.medium};
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: ${props => props.theme.spacing.small};
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: ${props => props.theme.spacing.small};
+  border: 1px solid #ddd;
+  border-radius: ${props => props.theme.borderRadius.small};
+  margin-bottom: ${props => props.theme.spacing.small};
 `;
 
 // Placeholder pages with Sizible styling
@@ -226,54 +246,134 @@ const AboutPage = () => (
   </>
 );
 
-const RetailerLoginPage = () => (
-  <>
-    <SizibleNavigation />
-    <PageContainer>
-      <SizibleCard elevated style={{ maxWidth: '500px', margin: '40px auto' }}>
-        <h2 className="card-heading">Retailer Login</h2>
-        <form>
-          <div>
-            <label htmlFor="retailerName">Retailer Name</label>
-            <input id="retailerName" type="text" placeholder="Enter your business name" />
-          </div>
-          <div>
-            <label htmlFor="personalName">Personal Name</label>
-            <input id="personalName" type="text" placeholder="Enter your name" />
-          </div>
-          <SizibleButton type="submit" fullWidth style={{ marginTop: '20px' }}>
-            Login
-          </SizibleButton>
-        </form>
-      </SizibleCard>
-    </PageContainer>
-  </>
-);
+const RetailerLoginPage = () => {
+  const [retailerName, setRetailerName] = useState('');
+  const [personalName, setPersonalName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [redirectToDashboard, setRedirectToDashboard] = useState(false);
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (!retailerName.trim()) {
+      setError('Please enter your retailer name');
+      return;
+    }
+    
+    if (!personalName.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // For prototype purposes, we'll redirect to dashboard for any input
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setRedirectToDashboard(true);
+    }, 1000);
+  };
+  
+  if (redirectToDashboard) {
+    return <Navigate to="/retailer/dashboard" />;
+  }
+  
+  return (
+    <>
+      <SizibleNavigation />
+      <PageContainer>
+        <SizibleCard elevated style={{ maxWidth: '500px', margin: '40px auto' }}>
+          <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Retailer Login</h2>
+          
+          {error && (
+            <div style={{ 
+              backgroundColor: '#ffebee', 
+              color: '#c62828', 
+              padding: '10px', 
+              borderRadius: '4px', 
+              marginBottom: '20px' 
+            }}>
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            <FormGroup>
+              <Label htmlFor="retailerName">Retailer Name</Label>
+              <Input 
+                id="retailerName"
+                type="text"
+                value={retailerName}
+                onChange={(e) => setRetailerName(e.target.value)}
+                placeholder="Enter your retailer name"
+                disabled={isSubmitting}
+              />
+            </FormGroup>
+            
+            <FormGroup>
+              <Label htmlFor="personalName">Your Name</Label>
+              <Input 
+                id="personalName"
+                type="text"
+                value={personalName}
+                onChange={(e) => setPersonalName(e.target.value)}
+                placeholder="Enter your name"
+                disabled={isSubmitting}
+              />
+            </FormGroup>
+            
+            <SizibleButton 
+              type="submit" 
+              fullWidth 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Logging in...' : 'Login'}
+            </SizibleButton>
+          </form>
+        </SizibleCard>
+      </PageContainer>
+    </>
+  );
+};
 
 const RetailerDashboardPage = () => (
   <>
     <SizibleNavigation isRetailer={true} />
     <PageContainer>
       <h1>Retailer Dashboard</h1>
-      <p>Welcome to your Sizible dashboard. Manage your inventory and style guidance here.</p>
+      <p>Welcome to your Sizible retailer dashboard. Manage your products and style guidance here.</p>
       
       <CardGrid>
         <SizibleCard>
-          <h3 className="card-heading">Inventory</h3>
-          <p className="card-content">Manage your garment inventory</p>
-          <SizibleButton>View Inventory</SizibleButton>
+          <h3 className="card-heading">Manage Products</h3>
+          <p className="card-content">
+            Add, edit, and manage your product catalog.
+          </p>
+          <div className="card-footer">
+            <SizibleButton as="a" href="/retailer/products" variant="secondary">View Products</SizibleButton>
+          </div>
+        </SizibleCard>
+        
+        <SizibleCard>
+          <h3 className="card-heading">Import Data</h3>
+          <p className="card-content">
+            Import product data from CSV files.
+          </p>
+          <div className="card-footer">
+            <SizibleButton as="a" href="/retailer/import">Import CSV</SizibleButton>
+          </div>
         </SizibleCard>
         
         <SizibleCard>
           <h3 className="card-heading">Style Guidance</h3>
-          <p className="card-content">Provide style advice for your customers</p>
-          <SizibleButton>Add Guidance</SizibleButton>
-        </SizibleCard>
-        
-        <SizibleCard>
-          <h3 className="card-heading">Analytics</h3>
-          <p className="card-content">View recommendation performance</p>
-          <SizibleButton>View Analytics</SizibleButton>
+          <p className="card-content">
+            Create and manage style guidance for your customers.
+          </p>
+          <div className="card-footer">
+            <SizibleButton as="a" href="/retailer/style-guidance" variant="secondary">Manage Guidance</SizibleButton>
+          </div>
         </SizibleCard>
       </CardGrid>
     </PageContainer>
@@ -410,6 +510,9 @@ function App() {
           {/* Retailer routes */}
           <Route path="/retailer/login" element={<RetailerLoginPage />} />
           <Route path="/retailer/dashboard" element={<RetailerDashboardPage />} />
+          <Route path="/retailer/import" element={<CsvImportPage />} />
+          <Route path="/retailer/products" element={<ManageProductsPage />} />
+          <Route path="/retailer/style-guidance" element={<StyleGuidancePage />} />
           
           {/* Consumer routes */}
           <Route path="/consumer" element={<ConsumerHomePage />} />
