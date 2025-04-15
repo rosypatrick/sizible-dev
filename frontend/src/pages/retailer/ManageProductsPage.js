@@ -205,9 +205,14 @@ const ManageProductsPage = () => {
       <PageContainer>
         <PageHeader>
           <h1>Manage Products</h1>
-          <SizibleButton as="a" href="/retailer/import">
-            Import Products
-          </SizibleButton>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <SizibleButton as="a" href="/retailer/import">
+              Import Products
+            </SizibleButton>
+            <SizibleButton variant="secondary">
+              Connect E-Commerce
+            </SizibleButton>
+          </div>
         </PageHeader>
         
         <SizibleCard elevated>

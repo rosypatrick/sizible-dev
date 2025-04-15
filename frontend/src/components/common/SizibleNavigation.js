@@ -108,8 +108,8 @@ const SizibleNavigation = ({ isRetailer = false }) => {
           // Retailer navigation links
           <>
             <NavLink to="/retailer/dashboard">Dashboard</NavLink>
-            <NavLink to="/retailer/inventory">Inventory</NavLink>
-            <NavLink to="/retailer/guidance">Style Guidance</NavLink>
+            <NavLink to="/retailer/products">Inventory</NavLink>
+            <NavLink to="/retailer/style-guidance">Style Guidance</NavLink>
             <SizibleButton as={Link} to="/retailer/logout" size="small">Logout</SizibleButton>
           </>
         ) : (
