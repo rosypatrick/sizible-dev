@@ -117,8 +117,8 @@ const SizibleNavigation = ({ isRetailer = false }) => {
           <>
             <NavLink to="/">Home</NavLink>
             <NavLink to="/consumer">Find Your Style</NavLink>
-            <NavLink to="/about">About</NavLink>
             <SizibleButton as={Link} to="/retailer/login" size="small">Retailer Login</SizibleButton>
+            <SizibleButton as={Link} to="/admin/login" size="small" variant="secondary" style={{ color: 'white' }}>Admin Login</SizibleButton>
           </>
         )}
       </NavLinks>

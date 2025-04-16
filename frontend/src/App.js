@@ -17,6 +17,9 @@ import MeasurementInput from './components/consumer/MeasurementInput';
 import CsvImportPage from './pages/retailer/CsvImportPage';
 import ManageProductsPage from './pages/retailer/ManageProductsPage';
 import StyleGuidancePage from './pages/retailer/StyleGuidancePage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import ExcelUploadPage from './pages/admin/ExcelUploadPage';
 import styled from 'styled-components';
 
 // Styled components for the pages
@@ -513,6 +516,11 @@ function App() {
           <Route path="/retailer/import" element={<CsvImportPage />} />
           <Route path="/retailer/products" element={<ManageProductsPage />} />
           <Route path="/retailer/style-guidance" element={<StyleGuidancePage />} />
+          
+          {/* Admin routes */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/excel-upload" element={<ExcelUploadPage />} />
           
           {/* Consumer routes */}
           <Route path="/consumer" element={<ConsumerHomePage />} />
