@@ -5,11 +5,12 @@
  * It displays a list of imported garments with filtering and search capabilities.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import SizibleNavigation from '../../components/common/SizibleNavigation';
 import SizibleButton from '../../components/common/SizibleButton';
 import SizibleCard from '../../components/common/SizibleCard';
+import axios from 'axios';
 
 // Styled components
 const PageContainer = styled.div`
@@ -130,20 +131,6 @@ const PageButton = styled.button`
 `;
 
 /**
- * Sample product data for demonstration
- */
-const sampleProducts = [
-  { id: 1, sku: 'JR-D-001', name: 'Floral Print Dress', brand: 'Joseph Ribkoff', type: 'Dress', size: '10', color: 'Blue', stock: 15 },
-  { id: 2, sku: 'JR-D-002', name: 'Sleeveless Shift Dress', brand: 'Joseph Ribkoff', type: 'Dress', size: '12', color: 'Black', stock: 8 },
-  { id: 3, sku: 'BB-T-001', name: 'Striped Blouse', brand: 'Betty Barclay', type: 'Top', size: 'M', color: 'White', stock: 20 },
-  { id: 4, sku: 'BB-P-001', name: 'Slim Fit Trousers', brand: 'Betty Barclay', type: 'Pants', size: '14', color: 'Navy', stock: 12 },
-  { id: 5, sku: 'FL-D-001', name: 'Evening Gown', brand: 'Frank Lyman', type: 'Dress', size: '8', color: 'Red', stock: 5 },
-  { id: 6, sku: 'FL-S-001', name: 'Pencil Skirt', brand: 'Frank Lyman', type: 'Skirt', size: '10', color: 'Black', stock: 10 },
-  { id: 7, sku: 'JR-T-001', name: 'Embellished Top', brand: 'Joseph Ribkoff', type: 'Top', size: '12', color: 'Ivory', stock: 7 },
-  { id: 8, sku: 'BB-D-001', name: 'Summer Dress', brand: 'Betty Barclay', type: 'Dress', size: '14', color: 'Green', stock: 9 },
-];
-
-/**
  * ManageProductsPage Component
  * 
  * @returns {JSX.Element} The manage products page component
@@ -153,25 +140,69 @@ const ManageProductsPage = () => {
   const [brandFilter, setBrandFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Get unique brands and types for filters
-  const brands = [...new Set(sampleProducts.map(product => product.brand))];
-  const types = [...new Set(sampleProducts.map(product => product.type))];
+  const itemsPerPage = 10;
   
-  // Filter products based on search and filters
-  const filteredProducts = sampleProducts.filter(product => {
-    const matchesSearch = searchTerm === '' || 
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/garments`);
+        
+        // Transform the data to match the expected format
+        const formattedProducts = response.data.map((item, index) => ({
+          id: index + 1,
+          sku: item.FE_Item_Code || '',
+          name: item.Title || '',
+          brand: item.Brand || '',
+          type: item.Garment_Type || '',
+          size: item.Garment_Size || '',
+          color: item["Color Family"] || '',
+          stock: item.Stock || '0',
+          // Keep the original data for reference
+          originalData: item
+        }));
+        
+        setProducts(formattedProducts);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, []);
+  
+  // Filter products based on search term and filters
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = 
+      searchTerm === '' || 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesBrand = brandFilter === '' || product.brand === brandFilter;
-    const matchesType = typeFilter === '' || product.type === typeFilter;
+    const matchesBrand = 
+      brandFilter === '' || 
+      product.brand.toLowerCase() === brandFilter.toLowerCase();
+    
+    const matchesType = 
+      typeFilter === '' || 
+      product.type.toLowerCase() === typeFilter.toLowerCase();
     
     return matchesSearch && matchesBrand && matchesType;
   });
   
-  // Pagination
+  // Get unique brands and types for filters
+  const brands = [...new Set(products.map(product => product.brand))].filter(Boolean);
+  const types = [...new Set(products.map(product => product.type))].filter(Boolean);
+  
+  // Calculate pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
@@ -245,7 +276,11 @@ const ManageProductsPage = () => {
             </FilterSelect>
           </SearchFilterBar>
           
-          {paginatedProducts.length > 0 ? (
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p style={{ color: 'red' }}>{error}</p>
+          ) : paginatedProducts.length > 0 ? (
             <>
               <ProductTable>
                 <thead>

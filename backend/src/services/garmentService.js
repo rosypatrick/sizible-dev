@@ -20,16 +20,16 @@ const supabase = require('../utils/supabaseClient');
 const getAllGarments = async (options = {}) => {
   try {
     let query = supabase
-      .from('garments')
-      .select('*, brands(name), garment_types(name)');
+      .from('garments_excel')
+      .select('*');
     
     // Apply filters if provided
     if (options.brandId) {
-      query = query.eq('brand_id', options.brandId);
+      query = query.eq('Brand', options.brandId);
     }
     
     if (options.garmentTypeId) {
-      query = query.eq('garment_type_id', options.garmentTypeId);
+      query = query.eq('Garment_Type', options.garmentTypeId);
     }
     
     // Apply pagination
@@ -64,9 +64,9 @@ const getAllGarments = async (options = {}) => {
 const getGarmentByCode = async (feItemCode) => {
   try {
     const { data, error } = await supabase
-      .from('garments')
-      .select('*, brands(name), garment_types(name)')
-      .eq('fe_item_code', feItemCode)
+      .from('garments_excel')
+      .select('*')
+      .eq('FE_Item_Code', feItemCode)
       .single();
     
     if (error) {
@@ -90,7 +90,7 @@ const getGarmentByCode = async (feItemCode) => {
 const createGarment = async (garmentData) => {
   try {
     const { data, error } = await supabase
-      .from('garments')
+      .from('garments_excel')
       .insert(garmentData)
       .select()
       .single();
@@ -110,16 +110,16 @@ const createGarment = async (garmentData) => {
 /**
  * Update an existing garment
  * 
- * @param {string} feItemCode - The FE_item_Code of the garment to update
+ * @param {string} feItemCode - The FE_Item_Code of the garment to update
  * @param {Object} garmentData - The updated garment data
  * @returns {Promise<Object>} The updated garment
  */
 const updateGarment = async (feItemCode, garmentData) => {
   try {
     const { data, error } = await supabase
-      .from('garments')
+      .from('garments_excel')
       .update(garmentData)
-      .eq('fe_item_code', feItemCode)
+      .eq('FE_Item_Code', feItemCode)
       .select()
       .single();
     
@@ -138,15 +138,15 @@ const updateGarment = async (feItemCode, garmentData) => {
 /**
  * Delete a garment
  * 
- * @param {string} feItemCode - The FE_item_Code of the garment to delete
+ * @param {string} feItemCode - The FE_Item_Code of the garment to delete
  * @returns {Promise<void>}
  */
 const deleteGarment = async (feItemCode) => {
   try {
     const { error } = await supabase
-      .from('garments')
+      .from('garments_excel')
       .delete()
-      .eq('fe_item_code', feItemCode);
+      .eq('FE_Item_Code', feItemCode);
     
     if (error) {
       console.error('Error deleting garment:', error);
