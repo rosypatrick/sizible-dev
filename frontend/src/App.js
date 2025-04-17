@@ -5,7 +5,7 @@
  * It sets up routing and global providers.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import theme from './styles/theme';
@@ -21,6 +21,7 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ExcelUploadPage from './pages/admin/ExcelUploadPage';
 import styled from 'styled-components';
+import axios from 'axios';
 
 // Styled components for the pages
 const PageContainer = styled.div`
@@ -390,6 +391,58 @@ const ConsumerHomePage = () => {
     hips: 100
   });
   
+  // State for dropdown data
+  const [brands, setBrands] = useState([]);
+  const [retailers, setRetailers] = useState([]);
+  const [garmentTypes, setGarmentTypes] = useState([]);
+  const [occasions, setOccasions] = useState([]);
+  const [itemCodes, setItemCodes] = useState([]);
+  
+  // State for selected values
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedRetailer, setSelectedRetailer] = useState('');
+  const [selectedGarmentType, setSelectedGarmentType] = useState('');
+  const [selectedOccasion, setSelectedOccasion] = useState('');
+  const [selectedItemCode, setSelectedItemCode] = useState('');
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Default values for dropdowns if API fails
+  const defaultBrands = [
+    { id: "Joseph Ribkoff", name: "Joseph Ribkoff" },
+    { id: "Vero Moda", name: "Vero Moda" },
+    { id: "H&M", name: "H&M" }
+  ];
+  
+  const defaultRetailers = [
+    { id: "Nordstrom", name: "Nordstrom" },
+    { id: "Macy's", name: "Macy's" },
+    { id: "Bloomingdale's", name: "Bloomingdale's" }
+  ];
+  
+  const defaultGarmentTypes = [
+    { id: "Dress", name: "Dress" },
+    { id: "Blouse", name: "Blouse" },
+    { id: "Pants", name: "Pants" },
+    { id: "Skirt", name: "Skirt" }
+  ];
+  
+  const defaultOccasions = [
+    { id: "Casual", name: "Casual" },
+    { id: "Formal", name: "Formal" },
+    { id: "Business", name: "Business" },
+    { id: "Party", name: "Party" },
+    { id: "Wedding", name: "Wedding" }
+  ];
+  
+  const defaultItemCodes = [
+    { id: "JR-12345", name: "JR-12345 - Black Dress" },
+    { id: "JR-67890", name: "JR-67890 - Red Blouse" },
+    { id: "VM-54321", name: "VM-54321 - Blue Jeans" }
+  ];
+  
+  // Handle measurement changes
   const handleMeasurementChange = (type, value) => {
     setMeasurements(prev => ({
       ...prev,
@@ -397,46 +450,194 @@ const ConsumerHomePage = () => {
     }));
   };
   
+  // Fetch data from the database
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      
+      try {
+        console.log('Fetching dropdown data from API...');
+        
+        // Fetch brands
+        const brandsResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/brands`);
+        console.log('Brands response:', brandsResponse.data);
+        if (brandsResponse.data && brandsResponse.data.brands && brandsResponse.data.brands.length > 0) {
+          setBrands(brandsResponse.data.brands);
+        } else {
+          console.log('Using default brands');
+          setBrands(defaultBrands);
+        }
+        
+        // Fetch retailers
+        const retailersResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/retailers`);
+        console.log('Retailers response:', retailersResponse.data);
+        if (retailersResponse.data && retailersResponse.data.retailers && retailersResponse.data.retailers.length > 0) {
+          setRetailers(retailersResponse.data.retailers);
+        } else {
+          console.log('Using default retailers');
+          setRetailers(defaultRetailers);
+        }
+        
+        // Fetch garment types
+        const garmentTypesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/garment-types`);
+        console.log('Garment types response:', garmentTypesResponse.data);
+        if (garmentTypesResponse.data && garmentTypesResponse.data.garmentTypes && garmentTypesResponse.data.garmentTypes.length > 0) {
+          setGarmentTypes(garmentTypesResponse.data.garmentTypes);
+        } else {
+          console.log('Using default garment types');
+          setGarmentTypes(defaultGarmentTypes);
+        }
+        
+        // Fetch occasions
+        const occasionsResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/occasions`);
+        console.log('Occasions response:', occasionsResponse.data);
+        if (occasionsResponse.data && occasionsResponse.data.occasions && occasionsResponse.data.occasions.length > 0) {
+          setOccasions(occasionsResponse.data.occasions);
+        } else {
+          console.log('Using default occasions');
+          setOccasions(defaultOccasions);
+        }
+        
+        // Fetch item codes
+        const itemCodesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/item-codes`);
+        console.log('Item codes response:', itemCodesResponse.data);
+        if (itemCodesResponse.data && itemCodesResponse.data.itemCodes && itemCodesResponse.data.itemCodes.length > 0) {
+          setItemCodes(itemCodesResponse.data.itemCodes);
+        } else {
+          console.log('Using default item codes');
+          setItemCodes(defaultItemCodes);
+        }
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching dropdown data:', err);
+        setError('Failed to load dropdown options. Using default values.');
+        
+        // Set defaults if API fails
+        setBrands(defaultBrands);
+        setRetailers(defaultRetailers);
+        setGarmentTypes(defaultGarmentTypes);
+        setOccasions(defaultOccasions);
+        setItemCodes(defaultItemCodes);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Handle dropdown selection changes
+  const handleBrandChange = (e) => {
+    setSelectedBrand(e.target.value);
+  };
+  
+  const handleRetailerChange = (e) => {
+    setSelectedRetailer(e.target.value);
+  };
+  
+  const handleGarmentTypeChange = (e) => {
+    setSelectedGarmentType(e.target.value);
+  };
+  
+  const handleOccasionChange = (e) => {
+    setSelectedOccasion(e.target.value);
+  };
+  
+  const handleItemCodeChange = (e) => {
+    setSelectedItemCode(e.target.value);
+  };
+
   return (
     <>
       <SizibleNavigation />
       <PageContainer>
-        <h1>Find Your Perfect Style</h1>
-        <p>Get personalized size and style recommendations from your favorite retailers.</p>
-        
-        <SizibleCard style={{ maxWidth: '600px', margin: '40px auto' }}>
-          <h3 className="card-heading">Get Started</h3>
+        <SizibleCard elevated style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h1>Find Your Perfect Size</h1>
+          <p>Enter your measurements and preferences to get personalized size recommendations.</p>
+          
+          {error && (
+            <div style={{ color: 'red', marginBottom: '15px' }}>
+              {error}
+            </div>
+          )}
+          
           <form>
             <FormSection>
-              <SectionTitle>1. Select Your Retailer</SectionTitle>
+              <SectionTitle>1. Select Your Preferences</SectionTitle>
+              
               <div>
-                <label htmlFor="retailer">Select Retailer</label>
-                <select id="retailer">
-                  <option value="">-- Select a retailer --</option>
-                  <option value="1">Fashion Boutique</option>
-                  <option value="2">Style Haven</option>
-                  <option value="3">Trend Setters</option>
+                <label htmlFor="brand">Select Brand</label>
+                <select 
+                  id="brand" 
+                  value={selectedBrand}
+                  onChange={handleBrandChange}
+                  disabled={loading}
+                >
+                  <option value="">-- Select a brand --</option>
+                  {brands.map(brand => (
+                    <option key={brand.id} value={brand.id}>{brand.name}</option>
+                  ))}
                 </select>
               </div>
               
               <div>
-                <label htmlFor="brand">Select Brand</label>
-                <select id="brand">
-                  <option value="">-- Select a brand --</option>
-                  <option value="1">Joseph Ribkoff</option>
-                  <option value="2">Betty Barclay</option>
-                  <option value="3">Frank Lyman</option>
+                <label htmlFor="retailer">Select Retailer</label>
+                <select 
+                  id="retailer" 
+                  value={selectedRetailer}
+                  onChange={handleRetailerChange}
+                  disabled={loading}
+                >
+                  <option value="">-- Select a retailer --</option>
+                  {retailers.map(retailer => (
+                    <option key={retailer.id} value={retailer.id}>{retailer.name}</option>
+                  ))}
                 </select>
               </div>
               
               <div>
                 <label htmlFor="garmentType">Garment Type</label>
-                <select id="garmentType">
+                <select 
+                  id="garmentType" 
+                  value={selectedGarmentType}
+                  onChange={handleGarmentTypeChange}
+                  disabled={loading}
+                >
                   <option value="">-- Select garment type --</option>
-                  <option value="dress">Dress</option>
-                  <option value="top">Top</option>
-                  <option value="pants">Pants</option>
-                  <option value="skirt">Skirt</option>
+                  {garmentTypes.map(type => (
+                    <option key={type.id} value={type.id}>{type.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="occasion">Occasion</label>
+                <select 
+                  id="occasion" 
+                  value={selectedOccasion}
+                  onChange={handleOccasionChange}
+                  disabled={loading}
+                >
+                  <option value="">-- Select occasion --</option>
+                  {occasions.map(occasion => (
+                    <option key={occasion.id} value={occasion.id}>{occasion.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="itemCode">Unique Identifier (FE_Item_Code)</label>
+                <select 
+                  id="itemCode" 
+                  value={selectedItemCode}
+                  onChange={handleItemCodeChange}
+                  disabled={loading}
+                >
+                  <option value="">-- Select item code --</option>
+                  {itemCodes.map(code => (
+                    <option key={code.id} value={code.id}>{code.name}</option>
+                  ))}
                 </select>
               </div>
             </FormSection>

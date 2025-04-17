@@ -11,6 +11,7 @@ import styled from 'styled-components';
 import SizibleNavigation from '../../components/common/SizibleNavigation';
 import SizibleButton from '../../components/common/SizibleButton';
 import SizibleCard from '../../components/common/SizibleCard';
+import axios from 'axios';
 
 // Styled components
 const PageContainer = styled.div`
@@ -73,6 +74,12 @@ const CardContent = styled.div`
   margin-bottom: ${props => props.theme.spacing.medium};
 `;
 
+const LoadingIndicator = styled.div`
+  text-align: center;
+  color: ${props => props.theme.colors.text.secondary};
+  font-style: italic;
+`;
+
 /**
  * Admin Dashboard Page Component
  * 
@@ -86,6 +93,8 @@ const AdminDashboardPage = () => {
     brands: 0,
     uploads: 0
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Check if admin is authenticated
   useEffect(() => {
@@ -94,18 +103,22 @@ const AdminDashboardPage = () => {
       navigate('/admin/login');
     }
     
-    // Simulate fetching statistics
-    // In a real application, this would fetch data from the backend
+    // Fetch real statistics from the backend
     const fetchStats = async () => {
-      // Simulating API call
-      setTimeout(() => {
-        setStats({
-          products: 156,
-          retailers: 12,
-          brands: 24,
-          uploads: 8
-        });
-      }, 500);
+      try {
+        setLoading(true);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/dashboard-stats`);
+        if (response.data && response.data.stats) {
+          setStats(response.data.stats);
+        }
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError('Failed to load dashboard statistics. Using default values.');
+        // Keep the default values in case of error
+      } finally {
+        setLoading(false);
+      }
     };
     
     fetchStats();
@@ -127,27 +140,34 @@ const AdminDashboardPage = () => {
           </SizibleButton>
         </PageHeader>
         
-        <StatsGrid>
-          <StatCard>
-            <StatValue>{stats.products}</StatValue>
-            <StatLabel>Total Products</StatLabel>
-          </StatCard>
-          
-          <StatCard>
-            <StatValue>{stats.retailers}</StatValue>
-            <StatLabel>Retailers</StatLabel>
-          </StatCard>
-          
-          <StatCard>
-            <StatValue>{stats.brands}</StatValue>
-            <StatLabel>Brands</StatLabel>
-          </StatCard>
-          
-          <StatCard>
-            <StatValue>{stats.uploads}</StatValue>
-            <StatLabel>Data Uploads</StatLabel>
-          </StatCard>
-        </StatsGrid>
+        {loading ? (
+          <LoadingIndicator>Loading statistics...</LoadingIndicator>
+        ) : (
+          <>
+            {error && <div className="error-message">{error}</div>}
+            <StatsGrid>
+              <StatCard>
+                <StatValue>{stats.products}</StatValue>
+                <StatLabel>Total Products</StatLabel>
+              </StatCard>
+              
+              <StatCard>
+                <StatValue>{stats.retailers}</StatValue>
+                <StatLabel>Retailers</StatLabel>
+              </StatCard>
+              
+              <StatCard>
+                <StatValue>{stats.brands}</StatValue>
+                <StatLabel>Brands</StatLabel>
+              </StatCard>
+              
+              <StatCard>
+                <StatValue>{stats.uploads}</StatValue>
+                <StatLabel>Data Uploads</StatLabel>
+              </StatCard>
+            </StatsGrid>
+          </>
+        )}
         
         <h2>Admin Actions</h2>
         

@@ -285,7 +285,7 @@ const ManageProductsPage = () => {
               <ProductTable>
                 <thead>
                   <tr>
-                    <th>SKU</th>
+                    <th>Unique Identifier</th>
                     <th>Name</th>
                     <th>Brand</th>
                     <th>Type</th>

@@ -231,7 +231,395 @@ const getUploadHistory = async () => {
   }
 };
 
+/**
+ * Get dashboard statistics
+ * 
+ * @returns {Promise<Object>} Dashboard statistics
+ */
+const getDashboardStats = async () => {
+  try {
+    console.log('Fetching dashboard statistics from database');
+    
+    // Get total products count
+    const { count: productsCount, error: productsError } = await supabase
+      .from('garments_excel')
+      .select('*', { count: 'exact', head: true });
+    
+    if (productsError) {
+      console.error('Error counting products:', productsError);
+      throw new Error(`Database error: ${productsError.message}`);
+    }
+    
+    // Get unique retailers count
+    const { data: retailersData, error: retailersError } = await supabase
+      .from('garments_excel')
+      .select('Retailer')
+      .not('Retailer', 'is', null);
+    
+    if (retailersError) {
+      console.error('Error fetching retailers:', retailersError);
+      throw new Error(`Database error: ${retailersError.message}`);
+    }
+    
+    // Count unique retailers
+    const uniqueRetailers = new Set(retailersData.map(item => item.Retailer)).size;
+    
+    // Get unique brands count
+    const { data: brandsData, error: brandsError } = await supabase
+      .from('garments_excel')
+      .select('Brand')
+      .not('Brand', 'is', null);
+    
+    if (brandsError) {
+      console.error('Error fetching brands:', brandsError);
+      throw new Error(`Database error: ${brandsError.message}`);
+    }
+    
+    // Count unique brands
+    const uniqueBrands = new Set(brandsData.map(item => item.Brand)).size;
+    
+    // Get uploads count
+    const { count: uploadsCount, error: uploadsError } = await supabase
+      .from('upload_logs')
+      .select('*', { count: 'exact', head: true });
+    
+    if (uploadsError) {
+      console.error('Error counting uploads:', uploadsError);
+      // If the error is because the table doesn't exist, return 0
+      if (uploadsError.message && uploadsError.message.includes('relation "upload_logs" does not exist')) {
+        console.log('upload_logs table does not exist, returning 0');
+        return {
+          products: productsCount || 0,
+          retailers: uniqueRetailers || 0,
+          brands: uniqueBrands || 0,
+          uploads: 0
+        };
+      }
+      throw new Error(`Database error: ${uploadsError.message}`);
+    }
+    
+    return {
+      products: productsCount || 0,
+      retailers: uniqueRetailers || 0,
+      brands: uniqueBrands || 0,
+      uploads: uploadsCount || 0
+    };
+  } catch (error) {
+    console.error('Get dashboard stats service error:', error);
+    // Return default values in case of error
+    return {
+      products: 0,
+      retailers: 0,
+      brands: 0,
+      uploads: 0
+    };
+  }
+};
+
+/**
+ * Get unique brands from the database
+ * 
+ * @returns {Promise<Array>} Unique brands
+ */
+const getBrands = async () => {
+  try {
+    console.log('Fetching unique brands from database');
+    
+    // Get all brands from garments_excel table
+    const { data: brandsData, error: brandsError } = await supabase
+      .from('garments_excel')
+      .select('Brand')
+      .not('Brand', 'is', null);
+    
+    if (brandsError) {
+      console.error('Error fetching brands:', brandsError);
+      throw new Error(`Database error: ${brandsError.message}`);
+    }
+    
+    // Extract unique brands and sort them
+    const uniqueBrands = [...new Set(brandsData.map(item => item.Brand))]
+      .filter(Boolean)
+      .sort();
+    
+    return uniqueBrands.map(brand => ({
+      id: brand,
+      name: brand
+    }));
+  } catch (error) {
+    console.error('Get brands service error:', error);
+    return [];
+  }
+};
+
+/**
+ * Get unique garment types from the database
+ * 
+ * @returns {Promise<Array>} Unique garment types
+ */
+const getGarmentTypes = async () => {
+  try {
+    console.log('Fetching unique garment types from database');
+    
+    // Get all garment types from garments_excel table
+    const { data: garmentTypesData, error: garmentTypesError } = await supabase
+      .from('garments_excel')
+      .select('Garment_Type, Garment_Type_text')
+      .not('Garment_Type', 'is', null);
+    
+    if (garmentTypesError) {
+      console.error('Error fetching garment types:', garmentTypesError);
+      throw new Error(`Database error: ${garmentTypesError.message}`);
+    }
+    
+    // Create a map to track unique display names
+    const uniqueDisplayNames = new Map();
+    
+    // Process each item, normalizing and deduplicating
+    garmentTypesData
+      .filter(item => item.Garment_Type) // Filter out null/undefined values
+      .forEach(item => {
+        // Use the display name (text) or fall back to the type code
+        const displayName = (item.Garment_Type_text || item.Garment_Type).trim();
+        // Create a normalized key for comparison (lowercase)
+        const normalizedName = displayName.toLowerCase();
+        
+        // Only add if we haven't seen this display name yet
+        if (!uniqueDisplayNames.has(normalizedName)) {
+          uniqueDisplayNames.set(normalizedName, {
+            id: item.Garment_Type,
+            name: displayName
+          });
+        }
+      });
+    
+    // Convert to array and sort alphabetically
+    const uniqueTypes = Array.from(uniqueDisplayNames.values())
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    
+    console.log(`Found ${uniqueTypes.length} unique garment types out of ${garmentTypesData.length} total`);
+    
+    // Log the unique types for debugging
+    console.log('Unique garment types:', uniqueTypes.map(t => t.name).join(', '));
+    
+    return uniqueTypes;
+  } catch (error) {
+    console.error('Get garment types service error:', error);
+    return [];
+  }
+};
+
+/**
+ * Get unique retailers from the database
+ * 
+ * @returns {Promise<Array>} Unique retailers
+ */
+const getRetailers = async () => {
+  try {
+    console.log('Fetching unique retailers from database');
+    
+    // Get all retailers from garments_excel table
+    const { data: retailersData, error: retailersError } = await supabase
+      .from('garments_excel')
+      .select('Retailer')
+      .not('Retailer', 'is', null);
+    
+    if (retailersError) {
+      console.error('Error fetching retailers:', retailersError);
+      throw new Error(`Database error: ${retailersError.message}`);
+    }
+    
+    // Extract unique retailers and sort them
+    const uniqueRetailers = [...new Set(retailersData.map(item => item.Retailer))]
+      .filter(Boolean)
+      .sort();
+    
+    return uniqueRetailers.map(retailer => ({
+      id: retailer,
+      name: retailer
+    }));
+  } catch (error) {
+    console.error('Get retailers service error:', error);
+    return [];
+  }
+};
+
+/**
+ * Get unique FE_Item_Codes from the database
+ * 
+ * @returns {Promise<Array>} Unique FE_Item_Codes
+ */
+const getItemCodes = async () => {
+  try {
+    console.log('Fetching unique FE_Item_Codes from database');
+    
+    // Get all FE_Item_Codes from garments_excel table
+    const { data: itemCodesData, error: itemCodesError } = await supabase
+      .from('garments_excel')
+      .select('FE_Item_Code, Title')
+      .not('FE_Item_Code', 'is', null);
+    
+    if (itemCodesError) {
+      console.error('Error fetching FE_Item_Codes:', itemCodesError);
+      throw new Error(`Database error: ${itemCodesError.message}`);
+    }
+    
+    // Create a map to track unique item codes
+    const uniqueItemCodes = new Map();
+    
+    // Process each item, normalizing and deduplicating
+    itemCodesData
+      .filter(item => item.FE_Item_Code) // Filter out null/undefined values
+      .forEach(item => {
+        // Create a normalized key for comparison
+        const normalizedCode = item.FE_Item_Code.trim();
+        
+        // Use the title as display name if available, otherwise use the code
+        const displayName = item.Title ? 
+          `${normalizedCode} - ${item.Title}` : 
+          normalizedCode;
+        
+        // Only add if we haven't seen this code yet
+        if (!uniqueItemCodes.has(normalizedCode)) {
+          uniqueItemCodes.set(normalizedCode, {
+            id: normalizedCode,
+            name: displayName
+          });
+        }
+      });
+    
+    // Convert to array and sort
+    const itemCodes = Array.from(uniqueItemCodes.values())
+      .sort((a, b) => a.id.localeCompare(b.id));
+    
+    console.log(`Found ${itemCodes.length} unique FE_Item_Codes out of ${itemCodesData.length} total`);
+    
+    return itemCodes;
+  } catch (error) {
+    console.error('Get item codes service error:', error);
+    return [];
+  }
+};
+
+/**
+ * Get unique occasions from the database
+ * 
+ * @returns {Promise<Array>} Unique occasions
+ */
+const getOccasions = async () => {
+  try {
+    console.log('Fetching unique occasions from database');
+    
+    // Get all occasions from garments_excel table
+    // Note: Assuming occasions are stored in a field called "Occasion" or similar
+    const { data: occasionsData, error: occasionsError } = await supabase
+      .from('garments_excel')
+      .select('Occasion')
+      .not('Occasion', 'is', null);
+    
+    if (occasionsError) {
+      console.error('Error fetching occasions:', occasionsError);
+      throw new Error(`Database error: ${occasionsError.message}`);
+    }
+    
+    // Create a map to track unique occasions
+    const uniqueOccasions = new Map();
+    
+    // Process and deduplicate occasions
+    // Some occasions might be comma-separated values, so we need to split them
+    occasionsData.forEach(item => {
+      if (item.Occasion) {
+        // Split by comma if multiple occasions are present
+        const occasions = item.Occasion.split(',').map(occ => occ.trim());
+        
+        occasions.forEach(occasion => {
+          if (occasion) {
+            const normalizedOccasion = occasion.trim().toLowerCase();
+            const displayName = normalizedOccasion;
+            
+            // Only add if we haven't seen this occasion yet
+            if (!uniqueOccasions.has(normalizedOccasion)) {
+              uniqueOccasions.set(normalizedOccasion, {
+                id: occasion,
+                name: displayName
+              });
+            }
+          }
+        });
+      }
+    });
+    
+    // If no occasions found, provide some default values
+    if (uniqueOccasions.size === 0) {
+      const defaults = ['Casual', 'Formal', 'Business', 'Party', 'Wedding'];
+      defaults.forEach(occasion => {
+        uniqueOccasions.set(occasion.toLowerCase(), {
+          id: occasion,
+          name: occasion
+        });
+      });
+    }
+    
+    // Convert to array and sort alphabetically
+    const occasionsArray = Array.from(uniqueOccasions.values());
+    occasionsArray.sort((a, b) => a.name.localeCompare(b.name));
+    
+    console.log(`Found ${occasionsArray.length} unique occasions`);
+    return occasionsArray;
+  } catch (error) {
+    console.error('Get occasions service error:', error);
+    // Return default values in case of error
+    return [
+      { id: 'Casual', name: 'Casual' },
+      { id: 'Formal', name: 'Formal' },
+      { id: 'Business', name: 'Business' },
+      { id: 'Party', name: 'Party' },
+      { id: 'Wedding', name: 'Wedding' }
+    ];
+  }
+};
+
+/**
+ * Get all garment data for filtering dropdowns
+ * 
+ * @returns {Array} Array of garment data with relevant fields for filtering
+ */
+const getGarments = async () => {
+  try {
+    // Get all garment data from the database with only the fields needed for filtering
+    const { data: garmentData, error } = await supabase
+      .from('garments_excel')
+      .select('Retailer, Brand, Garment_Type, Occasion, FE_Item_Code');
+    
+    if (error) {
+      console.error('Error fetching garment data:', error);
+      throw new Error('Failed to fetch garment data');
+    }
+    
+    // Process the data to ensure consistent format for filtering
+    const processedData = garmentData.map(item => ({
+      Retailer: item.Retailer,
+      Brand: item.Brand,
+      Garment_Type: item.Garment_Type,
+      Occasion: item.Occasion,
+      FE_Item_Code: item.FE_Item_Code
+    }));
+    
+    console.log(`Retrieved ${processedData.length} garment records for filtering`);
+    return processedData;
+  } catch (error) {
+    console.error('Error in getGarments service:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   processExcelFile,
-  getUploadHistory
+  getUploadHistory,
+  getDashboardStats,
+  getBrands,
+  getGarmentTypes,
+  getRetailers,
+  getItemCodes,
+  getOccasions,
+  getGarments
 };
