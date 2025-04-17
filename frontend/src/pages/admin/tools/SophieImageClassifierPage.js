@@ -112,14 +112,15 @@ const SophieImageClassifierPage = () => {
                 width: "100%",
                 fontSize: 16,
                 poweredByTextColor: "#303235",
+                headerColor: "#ff5ea3",
                 botMessage: {
                   backgroundColor: "#f7f8ff",
                   textColor: "#303235",
                   showAvatar: true,
-                  avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
+                  avatarSrc: "/sizible-logo.webp",
                 },
                 userMessage: {
-                  backgroundColor: "#ff69b4",
+                  backgroundColor: "#ff5ea3",
                   textColor: "#ffffff",
                   showAvatar: true,
                   avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
@@ -128,7 +129,7 @@ const SophieImageClassifierPage = () => {
                   placeholder: "Upload an image or ask a question...",
                   backgroundColor: "#ffffff",
                   textColor: "#303235",
-                  sendButtonColor: "#ff69b4",
+                  sendButtonColor: "#ff5ea3",
                 }
               }
             }}

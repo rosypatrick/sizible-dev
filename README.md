@@ -15,6 +15,25 @@ This prototype demonstrates a fashion platform with dual interfaces for retailer
 - Git
 - Supabase account (for database)
 
+### GitHub Codespaces
+
+When running the application in GitHub Codespaces, you may need to run the following commands:
+
+1. **Set execute permissions for the scripts**
+   ```bash
+   # For backend (in Codespaces)
+   chmod +x ./backend/node_modules/.bin/nodemon
+
+   # For frontend (in Codespaces)
+   chmod +x ./frontend/node_modules/.bin/react-scripts
+   ```
+
+2. **Fix potential frontend build issues**
+   ```bash
+   # In the frontend directory (in Codespaces)
+   export NODE_OPTIONS=--openssl-legacy-provider
+   ```
+
 ### Installation
 
 1. **Clone the repository**
