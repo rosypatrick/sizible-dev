@@ -78,7 +78,9 @@ const getUploadHistory = async (req, res) => {
  */
 const getDashboardStats = async (req, res) => {
   try {
+    console.log('Dashboard stats request received');
     const stats = await adminService.getDashboardStats();
+    console.log('Dashboard stats retrieved:', JSON.stringify(stats, null, 2));
     
     res.status(200).json({
       stats

@@ -88,10 +88,10 @@ const LoadingIndicator = styled.div`
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
-    products: 0,
-    retailers: 0,
-    brands: 0,
-    uploads: 0
+    productCount: 0,
+    retailerCount: 0,
+    brandCount: 0,
+    recentUploads: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -108,8 +108,15 @@ const AdminDashboardPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/dashboard-stats`);
+        console.log('Dashboard API response:', response.data);
+        
         if (response.data && response.data.stats) {
-          setStats(response.data.stats);
+          setStats({
+            productCount: response.data.stats.productCount || 0,
+            retailerCount: response.data.stats.retailerCount || 0,
+            brandCount: response.data.stats.brandCount || 0,
+            recentUploads: response.data.stats.recentUploads || []
+          });
         }
         setError(null);
       } catch (err) {
@@ -147,22 +154,22 @@ const AdminDashboardPage = () => {
             {error && <div className="error-message">{error}</div>}
             <StatsGrid>
               <StatCard>
-                <StatValue>{stats.products}</StatValue>
+                <StatValue>{stats.productCount}</StatValue>
                 <StatLabel>Total Products</StatLabel>
               </StatCard>
               
               <StatCard>
-                <StatValue>{stats.retailers}</StatValue>
+                <StatValue>{stats.retailerCount}</StatValue>
                 <StatLabel>Retailers</StatLabel>
               </StatCard>
               
               <StatCard>
-                <StatValue>{stats.brands}</StatValue>
+                <StatValue>{stats.brandCount}</StatValue>
                 <StatLabel>Brands</StatLabel>
               </StatCard>
               
               <StatCard>
-                <StatValue>{stats.uploads}</StatValue>
+                <StatValue>{stats.recentUploads.length}</StatValue>
                 <StatLabel>Data Uploads</StatLabel>
               </StatCard>
             </StatsGrid>
