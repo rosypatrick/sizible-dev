@@ -20,6 +20,8 @@ import StyleGuidancePage from './pages/retailer/StyleGuidancePage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ExcelUploadPage from './pages/admin/ExcelUploadPage';
+import ToolsCalculatorsPage from './pages/admin/tools/ToolsCalculatorsPage';
+import SophieImageClassifierPage from './pages/admin/tools/SophieImageClassifierPage';
 import styled from 'styled-components';
 import axios from 'axios';
 
@@ -722,6 +724,8 @@ function App() {
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/excel-upload" element={<ExcelUploadPage />} />
+          <Route path="/admin/tools" element={<ToolsCalculatorsPage />} />
+          <Route path="/admin/tools/sophie-image-classifier" element={<SophieImageClassifierPage />} />
           
           {/* Consumer routes */}
           <Route path="/consumer" element={<ConsumerHomePage />} />

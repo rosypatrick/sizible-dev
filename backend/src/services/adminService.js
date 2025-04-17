@@ -62,16 +62,6 @@ const processExcelFile = async (fileBuffer, filename, userId) => {
       
       if (logError) {
         console.error('Error creating upload log:', logError);
-        // If the error is because the table doesn't exist, try to create it
-        if (logError.message && logError.message.includes('relation "upload_logs" does not exist')) {
-          console.log('Attempting to create upload_logs table...');
-          const { error: createTableError } = await supabase.rpc('create_upload_logs_table');
-          if (createTableError) {
-            console.error('Failed to create upload_logs table:', createTableError);
-          } else {
-            console.log('upload_logs table created successfully');
-          }
-        }
         // Continue processing even if we couldn't log it
       }
       
@@ -108,125 +98,82 @@ const processExcelFile = async (fileBuffer, filename, userId) => {
             "Brand": row.Brand || null,
             "Garment_Type_text": row.Garment_Type_text || null,
             "Garment_Type": row.Garment_Type || null,
-            "Garment_Size": row.Garment_Size || null,
-            "Color Family": row["Color Family"] || null,
-            "Price": row.Price ? row.Price.toString().replace('€', '').trim() : null,
-            "Stock": row.Stock || null,
-            "Image Src": row["Image Src"] || null,
-            "prd_url": row.prd_url || null,
             "Retailer": row.Retailer || null,
-            "Material": row.Material || null,
-            "Pattern": row.Pattern || null,
-            "updated_at": new Date().toISOString()
+            "Occasion": row.Occasion || null,
+            "updated_at": new Date().toISOString(),
+            "upload_id": logId || null
           };
           
           let result;
           
-          // If the garment exists, update it
-          if (existingData?.id) {
-            console.log(`Updating existing garment: ${row.FE_Item_Code}`);
-            const { data: updateData, error: updateError } = await supabase
+          if (existingData) {
+            // Update existing garment
+            result = await supabase
               .from('garments_excel')
               .update(garmentData)
-              .eq('id', existingData.id)
-              .select();
-            
-            if (updateError) {
-              console.error(`Error updating garment ${row.FE_Item_Code}:`, updateError);
+              .eq('id', existingData.id);
+              
+            if (result.error) {
+              console.error(`Error updating garment: ${result.error.message}`);
               errorCount++;
             } else {
-              successCount++;
               updateCount++;
-              console.log(`Updated garment ${row.FE_Item_Code} successfully`);
+              successCount++;
             }
-          } 
-          // Otherwise, insert a new garment
-          else {
-            console.log(`Inserting new garment: ${row.FE_Item_Code}`);
-            garmentData.created_at = new Date().toISOString();
-            
-            const { data: insertData, error: insertError } = await supabase
+          } else {
+            // Insert new garment
+            result = await supabase
               .from('garments_excel')
-              .insert(garmentData)
-              .select();
-            
-            if (insertError) {
-              console.error(`Error inserting garment ${row.FE_Item_Code}:`, insertError);
+              .insert(garmentData);
+              
+            if (result.error) {
+              console.error(`Error inserting garment: ${result.error.message}`);
               errorCount++;
             } else {
-              successCount++;
               insertCount++;
-              console.log(`Inserted new garment ${row.FE_Item_Code} successfully`);
+              successCount++;
             }
           }
         } catch (rowError) {
-          console.error(`Error processing row with FE_Item_Code ${row.FE_Item_Code}:`, rowError);
+          console.error(`Error processing row: ${rowError.message}`);
           errorCount++;
         }
       }
       
-      console.log(`Processing complete. Success: ${successCount}, Errors: ${errorCount}, Updated: ${updateCount}, Inserted: ${insertCount}`);
-      
-      // Update the upload log with results
+      // Update the upload log with the results
       if (logId) {
-        const { error: updateLogError } = await supabase
+        const { error: updateError } = await supabase
           .from('upload_logs')
           .update({
-            status: errorCount > 0 ? 'partial' : 'success',
-            success_count: successCount,
-            error_count: errorCount,
-            completed_at: new Date().toISOString(),
-            details: {
-              updated: updateCount,
-              inserted: insertCount
-            }
+            status: 'completed',
+            records_processed: data.length,
+            records_succeeded: successCount,
+            records_failed: errorCount,
+            completed_at: new Date().toISOString()
           })
           .eq('id', logId);
-        
-        if (updateLogError) {
-          console.error('Error updating upload log:', updateLogError);
+          
+        if (updateError) {
+          console.error(`Error updating upload log: ${updateError.message}`);
         }
       }
       
+      console.log(`Excel processing completed. Success: ${successCount}, Errors: ${errorCount}, Inserts: ${insertCount}, Updates: ${updateCount}`);
+      
       return {
-        total: data.length,
         success: successCount,
         errors: errorCount,
-        updated: updateCount,
-        inserted: insertCount,
-        logId
+        inserts: insertCount,
+        updates: updateCount,
+        total: data.length
       };
-    } catch (error) {
-      console.error('Excel processing service error:', error);
-      throw error;
+      
+    } catch (parseError) {
+      console.error('Error parsing Excel file:', parseError);
+      throw new Error(`Failed to parse Excel file: ${parseError.message}`);
     }
-  } catch (parseError) {
-    console.error('Error parsing Excel file:', parseError);
-    throw new Error(`Failed to parse Excel file: ${parseError.message}`);
-  }
-};
-
-/**
- * Get upload history
- * 
- * @returns {Promise<Array>} Upload history records
- */
-const getUploadHistory = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('upload_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20);
-    
-    if (error) {
-      console.error('Error fetching upload history:', error);
-      throw new Error(`Database error: ${error.message}`);
-    }
-    
-    return data;
   } catch (error) {
-    console.error('Get upload history service error:', error);
+    console.error('Excel processing error:', error);
     throw error;
   }
 };
@@ -240,15 +187,17 @@ const getDashboardStats = async () => {
   try {
     console.log('Fetching dashboard statistics from database');
     
-    // Get total products count
-    const { count: productsCount, error: productsError } = await supabase
+    // Get total products count - using length of returned array instead of count
+    const { data: productsData, error: productsError } = await supabase
       .from('garments_excel')
-      .select('*', { count: 'exact', head: true });
+      .select('id');
     
     if (productsError) {
-      console.error('Error counting products:', productsError);
+      console.error('Error fetching products:', productsError);
       throw new Error(`Database error: ${productsError.message}`);
     }
+    
+    const productsCount = productsData ? productsData.length : 0;
     
     // Get unique retailers count
     const { data: retailersData, error: retailersError } = await supabase
@@ -278,13 +227,13 @@ const getDashboardStats = async () => {
     // Count unique brands
     const uniqueBrands = new Set(brandsData.map(item => item.Brand)).size;
     
-    // Get uploads count
-    const { count: uploadsCount, error: uploadsError } = await supabase
+    // Get uploads count - using length of returned array instead of count
+    const { data: uploadsData, error: uploadsError } = await supabase
       .from('upload_logs')
-      .select('*', { count: 'exact', head: true });
+      .select('id');
     
     if (uploadsError) {
-      console.error('Error counting uploads:', uploadsError);
+      console.error('Error fetching uploads:', uploadsError);
       // If the error is because the table doesn't exist, return 0
       if (uploadsError.message && uploadsError.message.includes('relation "upload_logs" does not exist')) {
         console.log('upload_logs table does not exist, returning 0');
@@ -297,6 +246,8 @@ const getDashboardStats = async () => {
       }
       throw new Error(`Database error: ${uploadsError.message}`);
     }
+    
+    const uploadsCount = uploadsData ? uploadsData.length : 0;
     
     return {
       products: productsCount || 0,
@@ -313,6 +264,37 @@ const getDashboardStats = async () => {
       brands: 0,
       uploads: 0
     };
+  }
+};
+
+/**
+ * Get upload history
+ * 
+ * @returns {Promise<Array>} Upload history records
+ */
+const getUploadHistory = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('upload_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (error) {
+      console.error('Error fetching upload history:', error);
+      // If the error is because the table doesn't exist, return empty array
+      if (error.message && error.message.includes('relation "upload_logs" does not exist')) {
+        console.log('upload_logs table does not exist, returning empty array');
+        return [];
+      }
+      throw new Error(`Database error: ${error.message}`);
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Get upload history service error:', error);
+    // Return empty array instead of throwing error
+    return [];
   }
 };
 

@@ -185,6 +185,18 @@ const AdminDashboardPage = () => {
           </ActionCard>
           
           <ActionCard>
+            <h3 className="card-heading">Tools & Calculators</h3>
+            <CardContent>
+              <p>Access AI-powered tools like Sophie Image Classifier and other utilities.</p>
+            </CardContent>
+            <div className="card-footer">
+              <SizibleButton as={Link} to="/admin/tools" fullWidth>
+                Open Tools & Calculators
+              </SizibleButton>
+            </div>
+          </ActionCard>
+          
+          <ActionCard>
             <h3 className="card-heading">Manage Retailers</h3>
             <CardContent>
               <p>View and manage retailer accounts and permissions.</p>
