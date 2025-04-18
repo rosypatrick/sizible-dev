@@ -27,7 +27,11 @@ const app = express();
 // Middleware
 app.use(helmet()); // Security headers
 app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
+  origin: function(origin, callback) {
+    // Allow all origins in development
+    // For production, you would want to restrict this to specific domains
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

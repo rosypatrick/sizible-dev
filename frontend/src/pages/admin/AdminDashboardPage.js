@@ -110,12 +110,12 @@ const AdminDashboardPage = () => {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/admin/dashboard-stats`);
         console.log('Dashboard API response:', response.data);
         
-        if (response.data && response.data.stats) {
+        if (response.data) {
           setStats({
-            productCount: response.data.stats.productCount || 0,
-            retailerCount: response.data.stats.retailerCount || 0,
-            brandCount: response.data.stats.brandCount || 0,
-            recentUploads: response.data.stats.recentUploads || []
+            productCount: response.data.productCount || 0,
+            retailerCount: response.data.retailerCount || 0,
+            brandCount: response.data.brandCount || 0,
+            recentUploads: response.data.recentUploads || []
           });
         }
         setError(null);

@@ -82,9 +82,8 @@ const getDashboardStats = async (req, res) => {
     const stats = await adminService.getDashboardStats();
     console.log('Dashboard stats retrieved:', JSON.stringify(stats, null, 2));
     
-    res.status(200).json({
-      stats
-    });
+    // Return the stats directly without wrapping them in a stats property
+    res.status(200).json(stats);
   } catch (error) {
     console.error('Error in getDashboardStats controller:', error);
     res.status(500).json({
